@@ -1,282 +1,303 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-  <meta charset="UTF-8" />
-
-  <style>
-
-    body {
-      margin: 0;
-      padding: 40px;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-
-    h2 {
-      margin-bottom: 10px;
-    }
-
-    p {
-      margin-bottom: 20px;
-      color: #555;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .price-btn {
-      padding: 14px 24px;
-      border: 2px solid black;
-      border-radius: 8px;
-      background: white;
-      color: black;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .price-btn.active {
-      background: black;
-      color: white;
-    }
-
-    #sendBtn {
-      padding: 14px 24px;
-      border: none;
-      border-radius: 8px;
-      background: black;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-
-    .box {
-      margin-top: 20px;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 600px;
-      border: 1px solid #ddd;
-      box-sizing: border-box;
-      word-break: break-word;
-    }
-
-  </style>
-</head>
-
-<body>
-
-  <h2>Hosted iframe</h2>
-
-  <p>
-    Select a price and send payload to Shopify
-  </p>
-
-  <!-- PRICE BUTTONS -->
-  <div class="button-group">
-
-    <button
-      class="price-btn"
-      data-price="10"
-    >
-      $10
-    </button>
-
-    <button
-      class="price-btn"
-      data-price="20"
-    >
-      $20
-    </button>
-
-    <button
-      class="price-btn"
-      data-price="30"
-    >
-      $30
-    </button>
-
-  </div>
-
-  <!-- SELECTED VALUE -->
-  <div class="box">
-    <strong>Selected Price:</strong>
-
-    <div id="selectedPriceBox">
-      Nothing Selected
-    </div>
-  </div>
-
-  <!-- PARENT URL -->
-  <div class="box">
-    <strong>Parent URL:</strong>
-
-    <div id="parentUrlBox">
-      Loading...
-    </div>
-  </div>
-
-  <!-- SHOP -->
-  <div class="box">
-    <strong>Shop Name:</strong>
-
-    <div id="shopBox">
-      Waiting...
-    </div>
-  </div>
-
-  <!-- SEND BUTTON -->
-  <button id="sendBtn">
-    Send Data To Parent
-  </button>
-
-  <script>
-
-    // ============================================
-    // CONFIG STATE
-    // ============================================
-
-    let selectedPrice = null;
-
-    // ============================================
-    // GET PARENT URL
-    // ============================================
-
-    const parentUrl = document.referrer;
-
-    document.getElementById(
-      "parentUrlBox"
-    ).innerText = parentUrl || "No Referrer Found";
-
-    // ============================================
-    // RECEIVE SHOP DATA
-    // ============================================
-
-    let parentShop = null;
-
-    window.addEventListener("message", function(event) {
-
-      const data = event.data;
-
-      console.log("Received Data:", data);
-
-      if (data.type === "SHOP_DATA") {
-
-        parentShop = data.shop;
-
-        document.getElementById(
-          "shopBox"
-        ).innerText = parentShop;
-
+    <style>
+      body {
+        margin: 0;
+        padding: 40px;
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        box-sizing: border-box;
       }
 
-    });
+      h2 {
+        margin-bottom: 10px;
+      }
 
-    // ============================================
-    // PRICE BUTTON LOGIC
-    // ============================================
+      p {
+        margin-bottom: 20px;
+        color: #555;
+      }
 
-    const priceButtons = document.querySelectorAll(".price-btn");
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
 
-    priceButtons.forEach((button) => {
+      .price-btn {
+        padding: 14px 24px;
+        border: 2px solid black;
+        border-radius: 8px;
+        background: white;
+        color: black;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
 
-      button.addEventListener("click", function() {
+      .price-btn.active {
+        background: black;
+        color: white;
+      }
 
-        // REMOVE ACTIVE STATE
-        priceButtons.forEach((btn) => {
-          btn.classList.remove("active");
-        });
+      #sendBtn {
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        background: black;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
 
-        // ADD ACTIVE STATE
-        this.classList.add("active");
+      #sendBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-        // STORE VALUE
-        selectedPrice = Number(
-          this.dataset.price
-        );
+      .box {
+        margin-top: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 600px;
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+        word-break: break-word;
+      }
+    </style>
+  </head>
 
-        console.log(
-          "Selected Price:",
-          selectedPrice
-        );
+  <body>
+    <h2>Hosted iframe</h2>
 
-        // UPDATE UI
-        document.getElementById(
-          "selectedPriceBox"
-        ).innerText =
-          "$" + selectedPrice;
+    <p>Select a price and send payload to Shopify</p>
 
-      });
+    <!-- PRICE BUTTONS -->
+    <div class="button-group">
+      <button class="price-btn" data-price="10">$10</button>
 
-    });
+      <button class="price-btn" data-price="20">$20</button>
 
-    // ============================================
-    // SEND DATA TO SHOPIFY
-    // ============================================
+      <button class="price-btn" data-price="30">$30</button>
 
-    const variantId = 53732486087022;
+      <button class="price-btn" data-price="143">$143</button>
+    </div>
 
-    document
-      .getElementById("sendBtn")
-      .addEventListener("click", function() {
+    <!-- SELECTED PRICE -->
+    <div class="box">
+      <strong>Selected Price:</strong>
 
-        // VALIDATION
+      <div id="selectedPriceBox">Nothing Selected</div>
+    </div>
 
-        if (!selectedPrice) {
+    <!-- SHOP -->
+    <div class="box">
+      <strong>Shop:</strong>
 
-          alert("Please select a price");
+      <div id="shopBox">Waiting...</div>
+    </div>
 
-          return;
+    <!-- API RESPONSE -->
+    <div class="box">
+      <strong>Generated Variant ID:</strong>
 
+      <div id="variantBox">Waiting...</div>
+    </div>
+
+    <!-- BUTTON -->
+    <button id="sendBtn">Send Data To Parent</button>
+
+    <script>
+      // ============================================
+      // CONFIG STATE
+      // ============================================
+
+      let selectedPrice = null;
+      let parentShop = null;
+      let isLoading = false;
+
+      // ============================================
+      // RECEIVE SHOP DATA FROM PARENT
+      // ============================================
+
+      window.addEventListener("message", function (event) {
+        const data = event.data;
+
+        console.log("Received Data:", data);
+
+        if (data.type === "SHOP_DATA") {
+          parentShop = data.shop;
+
+          document.getElementById("shopBox").innerText = parentShop;
         }
-
-        // FINAL PAYLOAD
-
-        const payload = {
-
-          type: "ADD_TO_CART",
-
-          variantId: variantId,
-
-          configuration: {
-
-            selectedPrice: selectedPrice
-
-          },
-
-          parentUrl: parentUrl,
-
-          shop: parentShop
-
-        };
-
-        console.log(
-          "Sending Payload:",
-          payload
-        );
-
-        // SEND TO SHOPIFY PARENT
-
-        window.parent.postMessage(
-          payload,
-          "https://test-store-django-ani.myshopify.com"
-        );
-
       });
 
-  </script>
+      // ============================================
+      // PRICE BUTTONS
+      // ============================================
 
-</body>
+      const priceButtons = document.querySelectorAll(".price-btn");
+
+      priceButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          // REMOVE ACTIVE
+          priceButtons.forEach((btn) => {
+            btn.classList.remove("active");
+          });
+
+          // ACTIVE
+          this.classList.add("active");
+
+          // STORE PRICE
+          selectedPrice = Number(this.dataset.price);
+
+          // UPDATE UI
+          document.getElementById("selectedPriceBox").innerText =
+            "$" + selectedPrice;
+        });
+      });
+
+      // ============================================
+      // SEND BUTTON
+      // ============================================
+
+      document
+        .getElementById("sendBtn")
+        .addEventListener("click", async function () {
+          // VALIDATION
+
+          if (!selectedPrice) {
+            alert("Please select a price");
+
+            return;
+          }
+
+          if (!parentShop) {
+            alert("Shop data not received yet");
+
+            return;
+          }
+
+          if (isLoading) return;
+
+          isLoading = true;
+
+          const sendBtn = document.getElementById("sendBtn");
+
+          sendBtn.disabled = true;
+          sendBtn.innerText = "Generating Variant...";
+
+          try {
+            // ============================================
+            // API REQUEST BODY
+            // ============================================
+
+            const requestBody = {
+              shop: parentShop,
+
+              price: selectedPrice.toFixed(2),
+            };
+
+            console.log("Sending API Request:", requestBody);
+
+            // ============================================
+            // CALL API
+            // ============================================
+
+            const response = await fetch(
+              "https://specular-candace-intolerable.ngrok-free.dev/api/products/bridal",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+              },
+            );
+
+            if (!response.ok) {
+              throw new Error("API Request Failed");
+            }
+
+            // ============================================
+            // API RESPONSE
+            // ============================================
+
+            const result = await response.json();
+
+            console.log("API Response:", result);
+
+            // ============================================
+            // EXTRACT VARIANT ID
+            // ============================================
+
+            const fullVariantId = result.variant_id;
+
+            // gid://shopify/ProductVariant/53741530055022
+
+            const variantId = fullVariantId.split("/").pop();
+
+            console.log("Extracted Variant ID:", variantId);
+
+            // UPDATE UI
+
+            document.getElementById("variantBox").innerText = variantId;
+
+            // ============================================
+            // FINAL PAYLOAD
+            // ============================================
+
+            const payload = {
+              type: "ADD_TO_CART",
+
+              variantId: Number(variantId),
+
+              configuration: {
+                selectedPrice: selectedPrice,
+              },
+
+              shop: parentShop,
+            };
+
+            console.log("Sending Payload:", payload);
+
+            // ============================================
+            // SEND TO SHOPIFY PARENT
+            // ============================================
+
+            window.parent.postMessage(
+              payload,
+              "https://test-store-django-ani.myshopify.com",
+            );
+
+            sendBtn.innerText = "✅ Sent Successfully";
+          } catch (error) {
+            console.error(error);
+
+            alert("Failed To Generate Variant");
+
+            sendBtn.innerText = "❌ Failed";
+          } finally {
+            isLoading = false;
+
+            setTimeout(() => {
+              sendBtn.disabled = false;
+
+              sendBtn.innerText = "Send Data To Parent";
+            }, 2000);
+          }
+        });
+    </script>
+  </body>
 </html>
