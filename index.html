@@ -54,7 +54,14 @@
   </button>
 
   <script>
+    // ============================================
+    // GET PARENT URL
+    // ============================================
 
+    const parentUrl = document.referrer;
+
+    console.log("Parent URL:", parentUrl);
+    
     const variantId = 53732486087022;
 
     document
@@ -63,7 +70,9 @@
 
         const payload = {
           type: "ADD_TO_CART",
-          variantId: variantId
+          variantId: variantId,
+          // SEND PARENT URL BACK
+          parentUrl: parentUrl
         };
 
         console.log("Sending:", payload);
