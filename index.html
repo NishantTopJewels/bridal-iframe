@@ -15,7 +15,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       box-sizing: border-box;
     }
 
@@ -28,7 +28,29 @@
       color: #555;
     }
 
-    button {
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .price-btn {
+      padding: 14px 24px;
+      border: 2px solid black;
+      border-radius: 8px;
+      background: white;
+      color: black;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .price-btn.active {
+      background: black;
+      color: white;
+    }
+
+    #sendBtn {
       padding: 14px 24px;
       border: none;
       border-radius: 8px;
@@ -36,6 +58,7 @@
       color: white;
       font-size: 16px;
       cursor: pointer;
+      margin-top: 20px;
     }
 
     .box {
@@ -58,10 +81,45 @@
   <h2>Hosted iframe</h2>
 
   <p>
-    iframe ↔ Shopify communication
+    Select a price and send payload to Shopify
   </p>
 
-  <!-- DISPLAY PARENT URL -->
+  <!-- PRICE BUTTONS -->
+  <div class="button-group">
+
+    <button
+      class="price-btn"
+      data-price="10"
+    >
+      $10
+    </button>
+
+    <button
+      class="price-btn"
+      data-price="20"
+    >
+      $20
+    </button>
+
+    <button
+      class="price-btn"
+      data-price="30"
+    >
+      $30
+    </button>
+
+  </div>
+
+  <!-- SELECTED VALUE -->
+  <div class="box">
+    <strong>Selected Price:</strong>
+
+    <div id="selectedPriceBox">
+      Nothing Selected
+    </div>
+  </div>
+
+  <!-- PARENT URL -->
   <div class="box">
     <strong>Parent URL:</strong>
 
@@ -70,7 +128,7 @@
     </div>
   </div>
 
-  <!-- DISPLAY SHOP -->
+  <!-- SHOP -->
   <div class="box">
     <strong>Shop Name:</strong>
 
@@ -79,7 +137,7 @@
     </div>
   </div>
 
-  <!-- BUTTON -->
+  <!-- SEND BUTTON -->
   <button id="sendBtn">
     Send Data To Parent
   </button>
@@ -87,55 +145,36 @@
   <script>
 
     // ============================================
-    // GET PARENT URL FROM REFERRER
+    // CONFIG STATE
+    // ============================================
+
+    let selectedPrice = null;
+
+    // ============================================
+    // GET PARENT URL
     // ============================================
 
     const parentUrl = document.referrer;
-
-    console.log("Parent URL:", parentUrl);
 
     document.getElementById(
       "parentUrlBox"
     ).innerText = parentUrl || "No Referrer Found";
 
     // ============================================
-    // STORE SHOP DATA FROM PARENT
+    // RECEIVE SHOP DATA
     // ============================================
 
     let parentShop = null;
 
-    // ============================================
-    // RECEIVE DATA FROM SHOPIFY PARENT
-    // ============================================
-
     window.addEventListener("message", function(event) {
-
-      console.log("Received Event:", event);
-
-      // OPTIONAL SECURITY CHECK
-
-      /*
-      if (
-        event.origin !==
-        "https://test-store-django-ani.myshopify.com"
-      ) {
-        return;
-      }
-      */
 
       const data = event.data;
 
       console.log("Received Data:", data);
 
-      // ============================================
-      // RECEIVE SHOP DATA
-      // ============================================
-
       if (data.type === "SHOP_DATA") {
 
         parentShop = data.shop;
-
-        console.log("Shop Received:", parentShop);
 
         document.getElementById(
           "shopBox"
@@ -146,7 +185,45 @@
     });
 
     // ============================================
-    // SEND DATA BACK TO SHOPIFY
+    // PRICE BUTTON LOGIC
+    // ============================================
+
+    const priceButtons = document.querySelectorAll(".price-btn");
+
+    priceButtons.forEach((button) => {
+
+      button.addEventListener("click", function() {
+
+        // REMOVE ACTIVE STATE
+        priceButtons.forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        // ADD ACTIVE STATE
+        this.classList.add("active");
+
+        // STORE VALUE
+        selectedPrice = Number(
+          this.dataset.price
+        );
+
+        console.log(
+          "Selected Price:",
+          selectedPrice
+        );
+
+        // UPDATE UI
+        document.getElementById(
+          "selectedPriceBox"
+        ).innerText =
+          "$" + selectedPrice;
+
+      });
+
+    });
+
+    // ============================================
+    // SEND DATA TO SHOPIFY
     // ============================================
 
     const variantId = 53732486087022;
@@ -155,19 +232,42 @@
       .getElementById("sendBtn")
       .addEventListener("click", function() {
 
+        // VALIDATION
+
+        if (!selectedPrice) {
+
+          alert("Please select a price");
+
+          return;
+
+        }
+
+        // FINAL PAYLOAD
+
         const payload = {
 
           type: "ADD_TO_CART",
 
           variantId: variantId,
 
+          configuration: {
+
+            selectedPrice: selectedPrice
+
+          },
+
           parentUrl: parentUrl,
 
           shop: parentShop
 
         };
-        console.log("shop_name:", parentShop);
-        console.log("Sending:", payload);
+
+        console.log(
+          "Sending Payload:",
+          payload
+        );
+
+        // SEND TO SHOPIFY PARENT
 
         window.parent.postMessage(
           payload,
