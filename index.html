@@ -38,6 +38,18 @@
       cursor: pointer;
     }
 
+    .box {
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 600px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      word-break: break-word;
+    }
+
   </style>
 </head>
 
@@ -46,22 +58,97 @@
   <h2>Hosted iframe</h2>
 
   <p>
-    Click button to send variant to Shopify
+    iframe ↔ Shopify communication
   </p>
 
+  <!-- DISPLAY PARENT URL -->
+  <div class="box">
+    <strong>Parent URL:</strong>
+
+    <div id="parentUrlBox">
+      Loading...
+    </div>
+  </div>
+
+  <!-- DISPLAY SHOP -->
+  <div class="box">
+    <strong>Shop Name:</strong>
+
+    <div id="shopBox">
+      Waiting...
+    </div>
+  </div>
+
+  <!-- BUTTON -->
   <button id="sendBtn">
     Send Data To Parent
   </button>
 
   <script>
+
     // ============================================
-    // GET PARENT URL
+    // GET PARENT URL FROM REFERRER
     // ============================================
 
     const parentUrl = document.referrer;
 
     console.log("Parent URL:", parentUrl);
-    
+
+    document.getElementById(
+      "parentUrlBox"
+    ).innerText = parentUrl || "No Referrer Found";
+
+    // ============================================
+    // STORE SHOP DATA FROM PARENT
+    // ============================================
+
+    let parentShop = null;
+
+    // ============================================
+    // RECEIVE DATA FROM SHOPIFY PARENT
+    // ============================================
+
+    window.addEventListener("message", function(event) {
+
+      console.log("Received Event:", event);
+
+      // OPTIONAL SECURITY CHECK
+
+      /*
+      if (
+        event.origin !==
+        "https://test-store-django-ani.myshopify.com"
+      ) {
+        return;
+      }
+      */
+
+      const data = event.data;
+
+      console.log("Received Data:", data);
+
+      // ============================================
+      // RECEIVE SHOP DATA
+      // ============================================
+
+      if (data.type === "SHOP_DATA") {
+
+        parentShop = data.shop;
+
+        console.log("Shop Received:", parentShop);
+
+        document.getElementById(
+          "shopBox"
+        ).innerText = parentShop;
+
+      }
+
+    });
+
+    // ============================================
+    // SEND DATA BACK TO SHOPIFY
+    // ============================================
+
     const variantId = 53732486087022;
 
     document
@@ -69,15 +156,23 @@
       .addEventListener("click", function() {
 
         const payload = {
+
           type: "ADD_TO_CART",
+
           variantId: variantId,
-          // SEND PARENT URL BACK
-          parentUrl: parentUrl
+
+          parentUrl: parentUrl,
+
+          shop: parentShop
+
         };
 
         console.log("Sending:", payload);
 
-        window.parent.postMessage(payload, "https://test-store-django-ani.myshopify.com");
+        window.parent.postMessage(
+          payload,
+          "https://test-store-django-ani.myshopify.com"
+        );
 
       });
 
